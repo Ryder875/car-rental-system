@@ -1,5 +1,11 @@
 # 车辆租赁管理系统
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Node.js](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)
+![React](https://img.shields.io/badge/react-18.2.0-blue.svg)
+![MySQL](https://img.shields.io/badge/mysql-8.0+-orange.svg)
+![GitHub](https://img.shields.io/github/repo-size/Ryder875/car-rental-system?style=flat-square)
+
 一个功能完整的全栈车辆租赁管理系统，使用 Node.js + Express + MySQL 作为后端，React + Vite 作为前端。
 
 ## 项目特性
