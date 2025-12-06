@@ -1,0 +1,20 @@
+{
+  "name": "car-rental-system",
+  "version": "1.0.0",
+  "description": "车辆租赁管理系统 - 全栈应用",
+  "main": "index.js",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "setup:db": "node database/setup.js"
+  },
+  "keywords": ["car-rental", "fullstack", "database"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "mysql2": "^3.6.5",
+    "dotenv": "^16.3.1"
+  }
+}
+
