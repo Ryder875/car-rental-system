@@ -24,6 +24,7 @@ function Cars() {
   useEffect(() => {
     fetchBrands()
     fetchCars()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters])
 
   const fetchBrands = async () => {
@@ -50,7 +51,7 @@ function Cars() {
       setPagination(response.data.pagination)
       setError(null)
     } catch (err) {
-      setError('加载车辆失败: ' + (err.response?.data?.error || err.message))
+      setError('Failed to load cars: ' + (err.response?.data?.error || err.message))
     } finally {
       setLoading(false)
     }
@@ -58,7 +59,7 @@ function Cars() {
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => {
-      // 如果改变的是页码，不重置为1；否则重置为1
+      // keep page when changing page; reset to 1 when changing other filters
       if (key === 'page') {
         return { ...prev, [key]: value }
       } else {
@@ -68,19 +69,22 @@ function Cars() {
   }
 
   const handleDeleteCar = async (carId, carName) => {
-    if (!window.confirm(`确定要删除车辆 "${carName}" 吗？\n\n注意：\n- 如果该车辆有未完成的租赁订单，将无法删除\n- 如果该车辆有任何租赁历史记录（包括已完成的订单），将无法删除，因为需要保留业务数据`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete car "${carName}"?\n\nNote:\n- If this car has any active rentals, it cannot be deleted.\n- If this car has any rental history (including completed rentals), it cannot be deleted in order to preserve business data.`
+      )
+    ) {
       return
     }
 
     try {
       setDeletingCar(carId)
       await client.delete(`/cars/${carId}`)
-      alert('车辆删除成功！')
-      // 刷新车辆列表
+      alert('Car deleted successfully.')
       await fetchCars()
       await fetchBrands()
     } catch (err) {
-      alert('删除车辆失败: ' + (err.response?.data?.error || err.message))
+      alert('Failed to delete car: ' + (err.response?.data?.error || err.message))
     } finally {
       setDeletingCar(null)
     }
@@ -88,79 +92,83 @@ function Cars() {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      available: { text: '可用', color: '#28a745' },
-      rented: { text: '已租赁', color: '#ffc107' },
-      maintenance: { text: '维护中', color: '#dc3545' }
+      available: { text: 'Available', color: '#28a745' },
+      rented: { text: 'Rented', color: '#ffc107' },
+      maintenance: { text: 'Maintenance', color: '#dc3545' }
     }
     const statusInfo = statusMap[status] || { text: status, color: '#6c757d' }
     return (
-      <span style={{
-        padding: '0.25rem 0.75rem',
-        borderRadius: '12px',
-        fontSize: '0.875rem',
-        fontWeight: '500',
-        background: statusInfo.color + '20',
-        color: statusInfo.color
-      }}>
+      <span
+        style={{
+          padding: '0.25rem 0.75rem',
+          borderRadius: '12px',
+          fontSize: '0.875rem',
+          fontWeight: '500',
+          background: statusInfo.color + '20',
+          color: statusInfo.color
+        }}
+      >
         {statusInfo.text}
       </span>
     )
   }
 
   if (loading && !cars.length) {
-    return <div className="loading">加载中...</div>
+    return <div className="loading">Loading...</div>
   }
 
   return (
     <div>
-      <h1 style={{ marginBottom: '2rem' }}>车辆管理</h1>
+      <h1 style={{ marginBottom: '2rem' }}>Car Management</h1>
 
-      {/* 筛选器 */}
+      {/* Filters */}
       <div className="card" style={{ marginBottom: '2rem' }}>
         <div className="grid grid-4">
           <div className="form-group">
-            <label className="form-label">搜索</label>
+            <label className="form-label">Search</label>
             <input
               type="text"
               className="form-input"
-              placeholder="品牌、型号、描述..."
+              placeholder="Brand, model, description..."
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
             />
           </div>
           <div className="form-group">
-            <label className="form-label">品牌</label>
+            <label className="form-label">Brand</label>
             <select
               className="form-select"
               value={filters.brand}
               onChange={(e) => handleFilterChange('brand', e.target.value)}
             >
-              <option value="">全部</option>
+              <option value="">All</option>
               {brands.map(brand => (
-                <option key={brand} value={brand}>{brand}</option>
+                <option key={brand} value={brand}>
+                  {brand}
+                </option>
               ))}
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">状态</label>
+            <label className="form-label">Status</label>
             <select
               className="form-select"
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
             >
-              <option value="">全部</option>
-              <option value="available">可用</option>
-              <option value="rented">已租赁</option>
-              <option value="maintenance">维护中</option>
+              <option value="">All</option>
+              <option value="available">Available</option>
+              <option value="rented">Rented</option>
+              <option value="maintenance">Maintenance</option>
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">价格范围</label>
+            <label className="form-label">Price Range</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input
                 type="number"
                 className="form-input"
-                placeholder="最低"
+                placeholder="Min"
                 value={filters.minPrice}
                 onChange={(e) => handleFilterChange('minPrice', e.target.value)}
                 style={{ flex: 1 }}
@@ -168,7 +176,7 @@ function Cars() {
               <input
                 type="number"
                 className="form-input"
-                placeholder="最高"
+                placeholder="Max"
                 value={filters.maxPrice}
                 onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
                 style={{ flex: 1 }}
@@ -180,29 +188,36 @@ function Cars() {
 
       {error && <div className="error">{error}</div>}
 
-      {/* 车辆列表 */}
+      {/* Car list */}
       {cars.length === 0 ? (
         <div className="card">
-          <p style={{ textAlign: 'center', color: '#666' }}>暂无车辆数据</p>
+          <p style={{ textAlign: 'center', color: '#666' }}>
+            No cars found. Try adjusting the filters or add a new car.
+          </p>
         </div>
       ) : (
         <>
           <div className="grid grid-3">
             {cars.map(car => (
-              <div key={car.id} className="card" style={{ cursor: 'pointer' }}>
-                <Link to={`/cars/${car.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div style={{ 
-                    width: '100%', 
-                    height: '200px', 
-                    background: '#f0f0f0',
-                    borderRadius: '8px',
-                    marginBottom: '1rem',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'relative'
-                  }}>
+              <div key={car.id} className="card">
+                <Link
+                  to={`/cars/${car.id}`}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '200px',
+                      background: '#f0f0f0',
+                      borderRadius: '8px',
+                      marginBottom: '1rem',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative'
+                    }}
+                  >
                     <CarImage
                       src={car.image_url}
                       brand={car.brand}
@@ -210,52 +225,102 @@ function Cars() {
                       alt={car.brand + ' ' + car.model}
                     />
                   </div>
-                  <h3 style={{ marginBottom: '0.5rem' }}>{car.brand} {car.model}</h3>
-                  <div style={{ marginBottom: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
-                    <div>年份: {car.year}</div>
-                    <div>颜色: {car.color}</div>
-                    <div>车牌: {car.license_plate}</div>
-                    <div>座位: {car.seats}座 | {car.fuel_type === 'gasoline' ? '汽油' : car.fuel_type === 'diesel' ? '柴油' : car.fuel_type === 'electric' ? '电动' : '混动'} | {car.transmission === 'automatic' ? '自动' : '手动'}</div>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+                  <h3 style={{ marginBottom: '0.5rem' }}>
+                    {car.brand} {car.model}
+                  </h3>
+                  <div
+                    style={{
+                      marginBottom: '0.5rem',
+                      color: '#666',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <div>Year: {car.year}</div>
+                    <div>Color: {car.color}</div>
+                    <div>License: {car.license_plate}</div>
                     <div>
-                      <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#667eea' }}>
-                        ¥{parseFloat(car.daily_rate).toFixed(0)}
+                      Seats: {car.seats} |{' '}
+                      {car.fuel_type === 'gasoline'
+                        ? 'Gasoline'
+                        : car.fuel_type === 'diesel'
+                        ? 'Diesel'
+                        : car.fuel_type === 'electric'
+                        ? 'Electric'
+                        : 'Hybrid'}{' '}
+                      | {car.transmission === 'automatic' ? 'Automatic' : 'Manual'}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: '1rem'
+                    }}
+                  >
+                    <div>
+                      <span
+                        style={{
+                          fontSize: '1.5rem',
+                          fontWeight: 'bold',
+                          color: '#667eea'
+                        }}
+                      >
+                        ${parseFloat(car.daily_rate).toFixed(0)}
                       </span>
-                      <span style={{ color: '#666', fontSize: '0.9rem' }}>/天</span>
+                      <span style={{ color: '#666', fontSize: '0.9rem' }}>/day</span>
                     </div>
                     {getStatusBadge(car.status)}
                   </div>
                 </Link>
+
+                {/* Optional: delete button, if you want it visible in list
+                <button
+                  className="btn btn-secondary"
+                  style={{ marginTop: '0.75rem', width: '100%' }}
+                  disabled={deletingCar === car.id}
+                  onClick={() => handleDeleteCar(car.id, `${car.brand} ${car.model}`)}
+                >
+                  {deletingCar === car.id ? 'Deleting...' : 'Delete'}
+                </button> */}
               </div>
             ))}
           </div>
 
-          {/* 分页 */}
+          {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '2rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                marginTop: '2rem'
+              }}
+            >
               <button
                 className="btn btn-secondary"
                 disabled={filters.page === 1}
                 onClick={() => handleFilterChange('page', filters.page - 1)}
               >
-                上一页
+                Previous
               </button>
-              <span style={{ 
-                padding: '0.75rem 1.5rem', 
-                display: 'flex', 
-                alignItems: 'center',
-                background: 'white',
-                borderRadius: '6px'
-              }}>
-                第 {pagination.page} 页，共 {pagination.totalPages} 页
+              <span
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: 'white',
+                  borderRadius: '6px'
+                }}
+              >
+                Page {pagination.page} of {pagination.totalPages}
               </span>
               <button
                 className="btn btn-secondary"
                 disabled={filters.page === pagination.totalPages}
                 onClick={() => handleFilterChange('page', filters.page + 1)}
               >
-                下一页
+                Next
               </button>
             </div>
           )}
@@ -266,4 +331,3 @@ function Cars() {
 }
 
 export default Cars
-

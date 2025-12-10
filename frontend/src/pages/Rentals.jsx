@@ -16,6 +16,7 @@ function Rentals() {
 
   useEffect(() => {
     fetchRentals()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters])
 
   const fetchRentals = async () => {
@@ -33,7 +34,7 @@ function Rentals() {
       setPagination(response.data.pagination)
       setError(null)
     } catch (err) {
-      setError('加载订单失败: ' + (err.response?.data?.error || err.message))
+      setError('Failed to load rentals: ' + (err.response?.data?.error || err.message))
     } finally {
       setLoading(false)
     }
@@ -41,7 +42,7 @@ function Rentals() {
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => {
-      // 如果改变的是页码，不重置为1；否则重置为1
+      // keep page when changing page; reset to 1 when changing other filters
       if (key === 'page') {
         return { ...prev, [key]: value }
       } else {
@@ -52,136 +53,222 @@ function Rentals() {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      pending: { text: '待确认', color: '#ffc107' },
-      active: { text: '进行中', color: '#28a745' },
-      completed: { text: '已完成', color: '#6c757d' },
-      cancelled: { text: '已取消', color: '#dc3545' }
+      pending: { text: 'Pending', color: '#ffc107' },
+      active: { text: 'Active', color: '#28a745' },
+      completed: { text: 'Completed', color: '#6c757d' },
+      cancelled: { text: 'Cancelled', color: '#dc3545' }
     }
     const statusInfo = statusMap[status] || { text: status, color: '#6c757d' }
     return (
-      <span style={{
-        padding: '0.25rem 0.75rem',
-        borderRadius: '12px',
-        fontSize: '0.875rem',
-        fontWeight: '500',
-        background: statusInfo.color + '20',
-        color: statusInfo.color
-      }}>
+      <span
+        style={{
+          padding: '0.25rem 0.75rem',
+          borderRadius: '12px',
+          fontSize: '0.875rem',
+          fontWeight: '500',
+          background: statusInfo.color + '20',
+          color: statusInfo.color
+        }}
+      >
         {statusInfo.text}
       </span>
     )
   }
 
   if (loading && !rentals.length) {
-    return <div className="loading">加载中...</div>
+    return <div className="loading">Loading...</div>
   }
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1>租赁订单</h1>
-        <Link to="/rentals/new" className="btn btn-primary">创建新订单</Link>
+      {/* Header */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '2rem'
+        }}
+      >
+        <h1>Rentals</h1>
+        <Link to="/rentals/new" className="btn btn-primary">
+          Create New Rental
+        </Link>
       </div>
 
-      {/* 筛选器 */}
+      {/* Filters */}
       <div className="card" style={{ marginBottom: '2rem' }}>
         <div className="form-group">
-          <label className="form-label">订单状态</label>
+          <label className="form-label">Rental Status</label>
           <select
             className="form-select"
             value={filters.status}
             onChange={(e) => handleFilterChange('status', e.target.value)}
             style={{ maxWidth: '300px' }}
           >
-            <option value="">全部</option>
-            <option value="pending">待确认</option>
-            <option value="active">进行中</option>
-            <option value="completed">已完成</option>
-            <option value="cancelled">已取消</option>
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
           </select>
         </div>
       </div>
 
       {error && <div className="error">{error}</div>}
 
-      {/* 订单列表 */}
+      {/* Rental list */}
       {rentals.length === 0 ? (
         <div className="card">
-          <p style={{ textAlign: 'center', color: '#666' }}>暂无订单数据</p>
+          <p style={{ textAlign: 'center', color: '#666' }}>
+            No rental records found.
+          </p>
         </div>
       ) : (
         <>
           <div className="grid grid-2">
             {rentals.map(rental => (
               <div key={rental.id} className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: '1rem'
+                  }}
+                >
                   <div>
-                    <h3 style={{ marginBottom: '0.5rem' }}>订单 #{rental.id}</h3>
+                    <h3 style={{ marginBottom: '0.5rem' }}>
+                      Order #{rental.id}
+                    </h3>
                     <div style={{ color: '#666', fontSize: '0.9rem' }}>
                       {rental.brand} {rental.model}
                     </div>
                     <div style={{ color: '#666', fontSize: '0.9rem' }}>
-                      车牌: {rental.license_plate}
+                      License Plate: {rental.license_plate}
                     </div>
                   </div>
                   {getStatusBadge(rental.status)}
                 </div>
 
-                <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8f9fa', borderRadius: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <span style={{ color: '#666' }}>客户:</span>
+                <div
+                  style={{
+                    marginBottom: '1rem',
+                    padding: '1rem',
+                    background: '#f8f9fa',
+                    borderRadius: '6px'
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginBottom: '0.5rem'
+                    }}
+                  >
+                    <span style={{ color: '#666' }}>Customer:</span>
                     <strong>{rental.customer_name}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <span style={{ color: '#666' }}>联系电话:</span>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginBottom: '0.5rem'
+                    }}
+                  >
+                    <span style={{ color: '#666' }}>Phone:</span>
                     <span>{rental.customer_phone}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <span style={{ color: '#666' }}>租赁日期:</span>
-                    <span>{new Date(rental.start_date).toLocaleDateString('zh-CN')} - {new Date(rental.end_date).toLocaleDateString('zh-CN')}</span>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginBottom: '0.5rem'
+                    }}
+                  >
+                    <span style={{ color: '#666' }}>Rental Dates:</span>
+                    <span>
+                      {new Date(rental.start_date).toLocaleDateString('en-US')} -{' '}
+                      {new Date(rental.end_date).toLocaleDateString('en-US')}
+                    </span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <span style={{ color: '#666' }}>租赁天数:</span>
-                    <span>{rental.total_days} 天</span>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginBottom: '0.5rem'
+                    }}
+                  >
+                    <span style={{ color: '#666' }}>Total Days:</span>
+                    <span>{rental.total_days} day(s)</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#666' }}>总金额:</span>
-                    <strong style={{ fontSize: '1.25rem', color: '#28a745' }}>¥{parseFloat(rental.total_amount).toFixed(2)}</strong>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <span style={{ color: '#666' }}>Total Amount:</span>
+                    <strong
+                      style={{
+                        fontSize: '1.25rem',
+                        color: '#28a745'
+                      }}
+                    >
+                      ${parseFloat(rental.total_amount).toFixed(2)}
+                    </strong>
                   </div>
                 </div>
 
-                <Link to={`/rentals/${rental.id}`} className="btn btn-secondary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
-                  查看详情
+                <Link
+                  to={`/rentals/${rental.id}`}
+                  className="btn btn-secondary"
+                  style={{
+                    width: '100%',
+                    textAlign: 'center',
+                    display: 'block'
+                  }}
+                >
+                  View Details
                 </Link>
               </div>
             ))}
           </div>
 
-          {/* 分页 */}
+          {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '2rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                marginTop: '2rem'
+              }}
+            >
               <button
                 className="btn btn-secondary"
                 disabled={filters.page === 1}
                 onClick={() => handleFilterChange('page', filters.page - 1)}
               >
-                上一页
+                Previous
               </button>
-              <span style={{ 
-                padding: '0.75rem 1.5rem', 
-                display: 'flex', 
-                alignItems: 'center',
-                background: 'white',
-                borderRadius: '6px'
-              }}>
-                第 {pagination.page} 页，共 {pagination.totalPages} 页
+              <span
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: 'white',
+                  borderRadius: '6px'
+                }}
+              >
+                Page {pagination.page} of {pagination.totalPages}
               </span>
               <button
                 className="btn btn-secondary"
                 disabled={filters.page === pagination.totalPages}
                 onClick={() => handleFilterChange('page', filters.page + 1)}
               >
-                下一页
+                Next
               </button>
             </div>
           )}
@@ -192,4 +279,3 @@ function Rentals() {
 }
 
 export default Rentals
-

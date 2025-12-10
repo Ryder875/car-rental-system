@@ -26,6 +26,7 @@ function Customers() {
 
   useEffect(() => {
     fetchCustomers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters])
 
   const fetchCustomers = async () => {
@@ -43,7 +44,7 @@ function Customers() {
       setPagination(response.data.pagination)
       setError(null)
     } catch (err) {
-      setError('加载客户失败: ' + (err.response?.data?.error || err.message))
+      setError('Failed to load customers: ' + (err.response?.data?.error || err.message))
     } finally {
       setLoading(false)
     }
@@ -51,7 +52,7 @@ function Customers() {
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => {
-      // 如果改变的是页码，不重置为1；否则重置为1
+      // keep page when changing page; reset to 1 when changing other filters
       if (key === 'page') {
         return { ...prev, [key]: value }
       } else {
@@ -74,9 +75,9 @@ function Customers() {
 
     try {
       await client.post('/customers', newCustomer)
-      // 刷新客户列表
+      // refresh list
       await fetchCustomers()
-      // 重置表单
+      // reset form
       setNewCustomer({
         name: '',
         email: '',
@@ -86,56 +87,67 @@ function Customers() {
         driver_license: ''
       })
       setShowCustomerForm(false)
-      alert('客户创建成功！')
+      alert('Customer created successfully.')
     } catch (err) {
-      setError('创建客户失败: ' + (err.response?.data?.error || err.message))
+      setError('Failed to create customer: ' + (err.response?.data?.error || err.message))
     } finally {
       setCreatingCustomer(false)
     }
   }
 
   const handleDeleteCustomer = async (customerId, customerName) => {
-    if (!window.confirm(`确定要删除客户 "${customerName}" 吗？\n\n注意：\n- 如果该客户有未完成的租赁订单，将无法删除\n- 如果该客户有任何租赁历史记录（包括已完成的订单），将无法删除，因为需要保留业务数据`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete customer "${customerName}"?\n\nNote:\n- If this customer has any active rentals, they cannot be deleted.\n- If this customer has any rental history (including completed rentals), they cannot be deleted in order to preserve business data.`
+      )
+    ) {
       return
     }
 
     try {
       setDeletingCustomer(customerId)
       await client.delete(`/customers/${customerId}`)
-      alert('客户删除成功！')
-      // 刷新客户列表
+      alert('Customer deleted successfully.')
       await fetchCustomers()
     } catch (err) {
-      alert('删除客户失败: ' + (err.response?.data?.error || err.message))
+      alert('Failed to delete customer: ' + (err.response?.data?.error || err.message))
     } finally {
       setDeletingCustomer(null)
     }
   }
 
   if (loading && !customers.length) {
-    return <div className="loading">加载中...</div>
+    return <div className="loading">Loading...</div>
   }
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1>客户管理</h1>
+      {/* Header */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '2rem'
+        }}
+      >
+        <h1>Customer Management</h1>
         <button
           className="btn btn-primary"
           onClick={() => setShowCustomerForm(!showCustomerForm)}
         >
-          {showCustomerForm ? '取消' : '+ 添加新客户'}
+          {showCustomerForm ? 'Cancel' : '+ Add New Customer'}
         </button>
       </div>
 
-      {/* 添加客户表单 */}
+      {/* Create Customer Form */}
       {showCustomerForm && (
         <div className="card" style={{ marginBottom: '2rem' }}>
-          <h2 style={{ marginBottom: '1rem' }}>添加新客户</h2>
+          <h2 style={{ marginBottom: '1rem' }}>Add New Customer</h2>
           <form onSubmit={handleCreateCustomer}>
             <div className="grid grid-2">
               <div className="form-group">
-                <label className="form-label">姓名 *</label>
+                <label className="form-label">Name *</label>
                 <input
                   type="text"
                   className="form-input"
@@ -146,7 +158,7 @@ function Customers() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">邮箱 *</label>
+                <label className="form-label">Email *</label>
                 <input
                   type="email"
                   className="form-input"
@@ -157,7 +169,7 @@ function Customers() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">电话 *</label>
+                <label className="form-label">Phone *</label>
                 <input
                   type="tel"
                   className="form-input"
@@ -168,7 +180,7 @@ function Customers() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">身份证号 *</label>
+                <label className="form-label">ID Card Number *</label>
                 <input
                   type="text"
                   className="form-input"
@@ -179,7 +191,7 @@ function Customers() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">驾驶证号 *</label>
+                <label className="form-label">Driver License Number *</label>
                 <input
                   type="text"
                   className="form-input"
@@ -190,7 +202,7 @@ function Customers() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">地址</label>
+                <label className="form-label">Address</label>
                 <input
                   type="text"
                   className="form-input"
@@ -201,8 +213,12 @@ function Customers() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-              <button type="submit" className="btn btn-primary" disabled={creatingCustomer}>
-                {creatingCustomer ? '创建中...' : '创建客户'}
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={creatingCustomer}
+              >
+                {creatingCustomer ? 'Creating...' : 'Create Customer'}
               </button>
               <button
                 type="button"
@@ -219,21 +235,21 @@ function Customers() {
                   })
                 }}
               >
-                取消
+                Cancel
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* 搜索 */}
+      {/* Search */}
       <div className="card" style={{ marginBottom: '2rem' }}>
         <div className="form-group">
-          <label className="form-label">搜索客户</label>
+          <label className="form-label">Search Customers</label>
           <input
             type="text"
             className="form-input"
-            placeholder="姓名、邮箱、电话..."
+            placeholder="Name, email, phone..."
             value={filters.search}
             onChange={(e) => handleFilterChange('search', e.target.value)}
           />
@@ -242,10 +258,12 @@ function Customers() {
 
       {error && <div className="error">{error}</div>}
 
-      {/* 客户列表 */}
+      {/* Customer List */}
       {customers.length === 0 ? (
         <div className="card">
-          <p style={{ textAlign: 'center', color: '#666' }}>暂无客户数据</p>
+          <p style={{ textAlign: 'center', color: '#666' }}>
+            No customers found.
+          </p>
         </div>
       ) : (
         <>
@@ -253,13 +271,17 @@ function Customers() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #eee' }}>
-                  <th style={{ padding: '1rem', textAlign: 'left' }}>姓名</th>
-                  <th style={{ padding: '1rem', textAlign: 'left' }}>邮箱</th>
-                  <th style={{ padding: '1rem', textAlign: 'left' }}>电话</th>
-                  <th style={{ padding: '1rem', textAlign: 'left' }}>身份证号</th>
-                  <th style={{ padding: '1rem', textAlign: 'left' }}>驾驶证号</th>
-                  <th style={{ padding: '1rem', textAlign: 'left' }}>注册时间</th>
-                  <th style={{ padding: '1rem', textAlign: 'left' }}>操作</th>
+                  <th style={{ padding: '1rem', textAlign: 'left' }}>Name</th>
+                  <th style={{ padding: '1rem', textAlign: 'left' }}>Email</th>
+                  <th style={{ padding: '1rem', textAlign: 'left' }}>Phone</th>
+                  <th style={{ padding: '1rem', textAlign: 'left' }}>ID Card</th>
+                  <th style={{ padding: '1rem', textAlign: 'left' }}>
+                    Driver License
+                  </th>
+                  <th style={{ padding: '1rem', textAlign: 'left' }}>
+                    Registered At
+                  </th>
+                  <th style={{ padding: '1rem', textAlign: 'left' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -269,18 +291,26 @@ function Customers() {
                     <td style={{ padding: '1rem' }}>{customer.email}</td>
                     <td style={{ padding: '1rem' }}>{customer.phone}</td>
                     <td style={{ padding: '1rem' }}>{customer.id_card}</td>
-                    <td style={{ padding: '1rem' }}>{customer.driver_license}</td>
+                    <td style={{ padding: '1rem' }}>
+                      {customer.driver_license}
+                    </td>
                     <td style={{ padding: '1rem', color: '#666' }}>
-                      {new Date(customer.created_at).toLocaleDateString('zh-CN')}
+                      {customer.created_at
+                        ? new Date(customer.created_at).toLocaleDateString('en-US')
+                        : '-'}
                     </td>
                     <td style={{ padding: '1rem' }}>
                       <button
                         className="btn btn-danger"
                         style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-                        onClick={() => handleDeleteCustomer(customer.id, customer.name)}
+                        onClick={() =>
+                          handleDeleteCustomer(customer.id, customer.name)
+                        }
                         disabled={deletingCustomer === customer.id}
                       >
-                        {deletingCustomer === customer.id ? '删除中...' : '删除'}
+                        {deletingCustomer === customer.id
+                          ? 'Deleting...'
+                          : 'Delete'}
                       </button>
                     </td>
                   </tr>
@@ -289,31 +319,40 @@ function Customers() {
             </table>
           </div>
 
-          {/* 分页 */}
+          {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '2rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                marginTop: '2rem'
+              }}
+            >
               <button
                 className="btn btn-secondary"
                 disabled={filters.page === 1}
                 onClick={() => handleFilterChange('page', filters.page - 1)}
               >
-                上一页
+                Previous
               </button>
-              <span style={{ 
-                padding: '0.75rem 1.5rem', 
-                display: 'flex', 
-                alignItems: 'center',
-                background: 'white',
-                borderRadius: '6px'
-              }}>
-                第 {pagination.page} 页，共 {pagination.totalPages} 页
+              <span
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: 'white',
+                  borderRadius: '6px'
+                }}
+              >
+                Page {pagination.page} of {pagination.totalPages}
               </span>
               <button
                 className="btn btn-secondary"
                 disabled={filters.page === pagination.totalPages}
                 onClick={() => handleFilterChange('page', filters.page + 1)}
               >
-                下一页
+                Next
               </button>
             </div>
           )}
@@ -324,4 +363,3 @@ function Customers() {
 }
 
 export default Customers
-

@@ -22,30 +22,30 @@ function CarDetail() {
       setCar(response.data)
       setError(null)
     } catch (err) {
-      setError('加载车辆详情失败: ' + (err.response?.data?.error || err.message))
+      setError('Failed to load car details: ' + (err.response?.data?.error || err.message))
     } finally {
       setLoading(false)
     }
   }
 
   if (loading) {
-    return <div className="loading">加载中...</div>
+    return <div className="loading">Loading...</div>
   }
 
   if (error || !car) {
     return (
       <div>
-        <div className="error">{error || '车辆不存在'}</div>
-        <Link to="/cars" className="btn btn-secondary">返回车辆列表</Link>
+        <div className="error">{error || 'Car not found'}</div>
+        <Link to="/cars" className="btn btn-secondary">Back to Cars</Link>
       </div>
     )
   }
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      available: { text: '可用', color: '#28a745' },
-      rented: { text: '已租赁', color: '#ffc107' },
-      maintenance: { text: '维护中', color: '#dc3545' }
+      available: { text: 'Available', color: '#28a745' },
+      rented: { text: 'Rented', color: '#ffc107' },
+      maintenance: { text: 'Maintenance', color: '#dc3545' }
     }
     const statusInfo = statusMap[status] || { text: status, color: '#6c757d' }
     return (
@@ -65,14 +65,14 @@ function CarDetail() {
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
-        <Link to="/cars" className="btn btn-secondary">← 返回车辆列表</Link>
+        <Link to="/cars" className="btn btn-secondary">← Back to Cars</Link>
       </div>
 
       <div className="grid grid-2">
         <div className="card">
-          <div style={{ 
-            width: '100%', 
-            height: '400px', 
+          <div style={{
+            width: '100%',
+            height: '400px',
             background: '#f0f0f0',
             borderRadius: '8px',
             overflow: 'hidden',
@@ -97,62 +97,32 @@ function CarDetail() {
             {getStatusBadge(car.status)}
           </div>
 
+          {/* Price */}
           <div style={{ marginBottom: '2rem' }}>
             <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#667eea', marginBottom: '0.5rem' }}>
-              ¥{parseFloat(car.daily_rate).toFixed(0)}
-              <span style={{ fontSize: '1rem', color: '#666', fontWeight: 'normal' }}>/天</span>
+              ${parseFloat(car.daily_rate).toFixed(0)}
+              <span style={{ fontSize: '1rem', color: '#666', fontWeight: 'normal' }}>/day</span>
             </div>
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ marginBottom: '1rem' }}>车辆信息</h3>
+            <h3 style={{ marginBottom: '1rem' }}>Car Information</h3>
             <div style={{ display: 'grid', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
-                <span style={{ color: '#666' }}>品牌</span>
-                <strong>{car.brand}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
-                <span style={{ color: '#666' }}>型号</span>
-                <strong>{car.model}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
-                <span style={{ color: '#666' }}>年份</span>
-                <strong>{car.year}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
-                <span style={{ color: '#666' }}>颜色</span>
-                <strong>{car.color}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
-                <span style={{ color: '#666' }}>车牌号</span>
-                <strong>{car.license_plate}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
-                <span style={{ color: '#666' }}>里程数</span>
-                <strong>{car.mileage.toLocaleString()} 公里</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
-                <span style={{ color: '#666' }}>座位数</span>
-                <strong>{car.seats} 座</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
-                <span style={{ color: '#666' }}>燃料类型</span>
-                <strong>
-                  {car.fuel_type === 'gasoline' ? '汽油' : 
-                   car.fuel_type === 'diesel' ? '柴油' : 
-                   car.fuel_type === 'electric' ? '电动' : '混动'}
-                </strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
-                <span style={{ color: '#666' }}>变速箱</span>
-                <strong>{car.transmission === 'automatic' ? '自动' : '手动'}</strong>
-              </div>
+              <CarInfo label="Brand" value={car.brand} />
+              <CarInfo label="Model" value={car.model} />
+              <CarInfo label="Year" value={car.year} />
+              <CarInfo label="Color" value={car.color} />
+              <CarInfo label="License Plate" value={car.license_plate} />
+              <CarInfo label="Mileage" value={`${car.mileage.toLocaleString()} km`} />
+              <CarInfo label="Seats" value={`${car.seats} seats`} />
+              <CarInfo label="Fuel Type" value={formatFuel(car.fuel_type)} />
+              <CarInfo label="Transmission" value={car.transmission === 'automatic' ? 'Automatic' : 'Manual'} />
             </div>
           </div>
 
           {car.description && (
             <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ marginBottom: '1rem' }}>描述</h3>
+              <h3 style={{ marginBottom: '1rem' }}>Description</h3>
               <p style={{ color: '#666', lineHeight: '1.6' }}>{car.description}</p>
             </div>
           )}
@@ -163,7 +133,7 @@ function CarDetail() {
               className="btn btn-primary"
               style={{ width: '100%', textAlign: 'center', display: 'block' }}
             >
-              立即租赁
+              Rent Now
             </Link>
           )}
         </div>
@@ -172,5 +142,21 @@ function CarDetail() {
   )
 }
 
-export default CarDetail
+const CarInfo = ({ label, value }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
+    <span style={{ color: '#666' }}>{label}</span>
+    <strong>{value}</strong>
+  </div>
+)
 
+const formatFuel = (type) => {
+  const map = {
+    gasoline: 'Gasoline',
+    diesel: 'Diesel',
+    electric: 'Electric',
+    hybrid: 'Hybrid'
+  }
+  return map[type] || type
+}
+
+export default CarDetail

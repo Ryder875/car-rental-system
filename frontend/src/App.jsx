@@ -17,14 +17,14 @@ function App() {
         <nav className="navbar">
           <div className="nav-container">
             <Link to="/" className="nav-logo">
-              🚗 车辆租赁管理系统
+            Vehicle Rental Management System
             </Link>
             <div className="nav-menu">
-              <Link to="/" className="nav-link">仪表板</Link>
-              <Link to="/cars" className="nav-link">车辆管理</Link>
-              <Link to="/customers" className="nav-link">客户管理</Link>
-              <Link to="/rentals" className="nav-link">租赁订单</Link>
-              <Link to="/stats" className="nav-link">统计分析</Link>
+              <Link to="/" className="nav-link">Dashboard</Link>
+              <Link to="/cars" className="nav-link">Vehicle Management</Link>
+              <Link to="/customers" className="nav-link">Customer Management</Link>
+              <Link to="/rentals" className="nav-link">Rental orders</Link>
+              <Link to="/stats" className="nav-link">Statistical analysis</Link>
             </div>
           </div>
         </nav>
